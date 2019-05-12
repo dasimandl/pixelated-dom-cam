@@ -9,14 +9,16 @@ class PixelContainer extends Component {
     super();
     this.state = {
       keys: [],
-      removedKeys: [],
-      keysAdded: false
+      isAdding: false,
+      isRemoving: false
     };
     this.refStore = {};
     this.addToRefStore = this.addToRefStore.bind(this);
     this.flipDomNode = this.flipDomNode.bind(this);
     this.addClassInOrderToAllDomNode = this.addClassInOrderToAllDomNode.bind(this);
     this.removeClassInOrderFromAllDomNode = this.removeClassInOrderFromAllDomNode.bind(this);
+    this.randomlyAddClassToDomNodes = this.randomlyAddClassToDomNodes.bind(this);
+    this.randomlyRemoveClassFromDomNodes = this.randomlyRemoveClassFromDomNodes.bind(this);
     this.onResetState = this.onResetState.bind(this);
   }
   onResetState() {
@@ -47,10 +49,13 @@ class PixelContainer extends Component {
       console.error(err);
     }
   }
-  async randomlyChangeDomNodes(className, callback) {
+  async randomlyAddClassToDomNodes(className, callback) {
     try {
+      const { isRemoving } = this.state;
+      if (isRemoving) return;
       let { keys } = this.state;
       if (!keys.length) keys = await this.getRefStoreKeys();
+      this.setState({ ...this.state, isAdding: true });
 
       while (keys.length) {
         await this.waitFor(0);
@@ -59,6 +64,27 @@ class PixelContainer extends Component {
         callback(key, className);
         keys.splice(randomIndex, 1);
       }
+      this.setState({ ...this.state, isAdding: false });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  async randomlyRemoveClassFromDomNodes(className, callback) {
+    try {
+      const { isAdding } = this.state;
+      if (isAdding) return;
+      let { keys } = this.state;
+      if (!keys.length) keys = await this.getRefStoreKeys();
+      this.setState({ ...this.state, isRemoving: true });
+
+      while (keys.length) {
+        await this.waitFor(0);
+        let randomIndex = Math.floor(Math.random() * keys.length);
+        let key = keys[randomIndex];
+        callback(key, className);
+        keys.splice(randomIndex, 1);
+      }
+      this.setState({ ...this.state, isRemoving: false });
     } catch (err) {
       console.error(err);
     }
@@ -109,6 +135,12 @@ class PixelContainer extends Component {
     this.refStore[ref.id] = ref;
   }
 
+  nTimes(n, callback) {
+    for (let i = 0; i < 3; i++) {
+      callback();
+    }
+  }
+
   render() {
     if (!this.props.pixels) return <div>Loading...</div>;
     const {
@@ -135,8 +167,10 @@ class PixelContainer extends Component {
       <div>
         <button
           onClick={_ =>
-            this.randomlyChangeDomNodes("blue-background", (key, className) =>
-              this.addClassToSingleDomNode(key, className)
+            this.nTimes(4, _ =>
+              this.randomlyAddClassToDomNodes("blue-background", (key, className) =>
+                this.addClassToSingleDomNode(key, className)
+              )
             )
           }
         >
@@ -144,8 +178,10 @@ class PixelContainer extends Component {
         </button>
         <button
           onClick={_ =>
-            this.randomlyChangeDomNodes("blue-background", (key, className) =>
-              this.removeClassFromSingleDomNode(key, className)
+            this.nTimes(4, _ =>
+              this.randomlyRemoveClassFromDomNodes("blue-background", (key, className) =>
+                this.removeClassFromSingleDomNode(key, className)
+              )
             )
           }
         >
@@ -153,7 +189,7 @@ class PixelContainer extends Component {
         </button>
         <button
           onClick={_ =>
-            this.randomlyChangeDomNodes("flip-horizontal-top", (key, className) =>
+            this.randomlyAddClassToDomNodes("flip-horizontal-top", (key, className) =>
               this.addClassToSingleDomNode(key, className)
             )
           }
