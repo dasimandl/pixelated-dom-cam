@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>getUserMedia Example</title>
+    <meta charset="UTF-8" />
+    <script>
+      window.addEventListener(
+        "load",
+        function() {
+          const camera = document.getElementById("camera");
+          const canvas = document.querySelector("canvas");
+          const snap = document.getElementById("snap");
+          const pixelsContainer = document.getElementById("pixels-container");
+          const constraints = { audio: false, video: true };
+          const ctx = canvas.getContext("2d");
+          const app = document.getElementById("root");
+          let pixels = [];
+          const px = 10;
+          const width = 100;
+          const height = width * 0.75;
+          console.log("app", app);
+          app.innerHTML = `
+            <style>
+              #grid {
+                display: inline-grid;
+                grid-template-rows: repeat(${height}, ${px}px);
+                grid-template-columns: repeat(${width}, ${px}px);
+                cursor: none;
+              }
+              #grid div {
+                width: ${px}px;
+                height: ${px}px;
+                background: black;
+              }
+            </style>
+          `;
+          const grid = document.createElement("div");
+          grid.setAttribute("id", "grid");
+          // create grid
+          console.log("width", width, "h", height);
+          for (let i = 1; i <= height; i++) {
+            let row = i;
+            for (let j = 1; j <= width; j++) {
+              let col = j;
+              const node = document.createElement("div");
+              node.classList.add(`row-${row}`);
+              node.classList.add(`col-${col}`);
+              grid.appendChild(node);
+            }
+          }
+          app.appendChild(grid);
+
+          function success(stream) {
+            camera.srcObject = stream;
+            console.log("stream", stream);
+          }
+
+          function failure(error) {
+            alert(JSON.stringify(error));
+          }
+
+          function convertToRGBAMap(pixels) {
+            const { data, height, width } = pixels;
+            const RGBAMap = [];
+            const length = data.length;
+            let row = 1;
+            let col = 1;
+            for (let i = 0; i < data.length; i += 4) {
+              const R = data[i];
+              const G = data[i + 1];
+              const B = data[i + 2];
+              const A = data[i + 3];
+              RGBAMap.push([R, G, B, A]);
+              if (col % width === 0) {
+                row++;
+                col = 1;
+                continue;
+              }
+              col++;
+            }
+            return RGBAMap;
+          }
+          function draw(RGBAMap) {
+            let row = 1;
+            let col = 1;
+            RGBAMap.forEach((node, i) => {
+              const [R, G, B, A] = node;
+              document
+                .querySelector(`#grid > div.row-${row}.col-${col}`)
+                .setAttribute("style", `background: rgba(${R},${G},${B},${A})`);
+              if (col % width === 0) {
+                row++;
+                col = 0;
+              }
+              col++;
+            });
+          }
+
+          setInterval(drawImage, 500);
+
+          function drawImage() {
+            ctx.drawImage(camera, 0, 0, width, height);
+            // let base64Image = this.canvasTag.current.toDataURL('image/jpeg');
+            pixels = ctx.getImageData(0, 0, width, height);
+            console.log(pixels);
+            let RGBAMap = convertToRGBAMap(pixels);
+            console.time('draw')
+            draw(RGBAMap);
+            console.timeEnd('draw')
+            // RGBAMap.forEach(node => console.log(node));
+          }
+
+          if (navigator.getUserMedia) navigator.getUserMedia(constraints, success, failure);
+          else alert("Your browser does not support getUserMedia()");
+
+          snap.addEventListener("click", drawImage, false);
+        },
+        false
+      );
+    </script>
+  </head>
+  <body>
+    <button id="snap">Snap</button>
+    <br />
+    <video autoplay controls id="camera"></video>
+    <canvas width="400px" height="300px"></canvas>
+    <div id="pixels-container"></div>
+    <br />
+    <div id="root"></div>
+  </body>
+</html>
