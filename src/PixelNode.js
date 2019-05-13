@@ -2,8 +2,8 @@ import React from "react";
 
 const PixelNode = props => {
   const [R, G, B, A] = props.RGBA;
-  const { id, addToRefStore, width,  } = props;
-  const px = 1000 / width;
+  const { id, addToRefStore, numberOfPixelsWide } = props;
+  const px = 1000 / numberOfPixelsWide;
   const styles = {
     backgroundColor: `rgba(${R},${G},${B},${A})`,
     width: `${px}px`,

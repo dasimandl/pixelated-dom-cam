@@ -8,7 +8,7 @@ export default class Video extends Component {
       stream: null,
       pixels: null
     };
-    this.pixelContainerWidth = 25;
+    this.pixelContainerWidth = 40;
     this.pixelContainerHeight = this.pixelContainerWidth * 0.75;
     this.videoTag = React.createRef();
     this.canvasTag = React.createRef();
@@ -24,7 +24,6 @@ export default class Video extends Component {
         this.setState({ stream });
         this.videoTag.current.srcObject = stream;
         this.ctx = this.canvasTag.current.getContext("2d");
-        // console.log(this.ctx);
       })
       .catch(function(err) {
         console.error("An error occurred: " + err);
@@ -48,7 +47,6 @@ export default class Video extends Component {
 
   render() {
     const { stream, pixels } = this.state;
-    // console.log(stream);
     if (!stream) return <div>Loading...</div>;
     return (
       <div>
@@ -62,7 +60,7 @@ export default class Video extends Component {
           controls
           title={this.props.title}
         />
-        <PixelContainer width={this.pixelContainerWidth} pixels={pixels} />
+        <PixelContainer numberOfPixelsWide={this.pixelContainerWidth} pixels={pixels} />
         <canvas ref={this.canvasTag} width={this.props.width} height={this.props.height} />
       </div>
     );

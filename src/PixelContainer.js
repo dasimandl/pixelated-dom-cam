@@ -5,13 +5,14 @@ import "./App.css";
 const INITIAL_STATE = { keys: [], keysAdded: false };
 
 class PixelContainer extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
       keys: [],
       isAdding: false,
       isRemoving: false
     };
+    this.n = Math.floor(this.props.numberOfPixelsWide / 10) * 2;
     this.refStore = {};
     this.addToRefStore = this.addToRefStore.bind(this);
     this.flipDomNode = this.flipDomNode.bind(this);
@@ -52,7 +53,7 @@ class PixelContainer extends Component {
   async randomlyAddClassToDomNodes(className, callback) {
     try {
       const { isRemoving } = this.state;
-      if (isRemoving) return;
+      if (isRemoving) return console.log("CANNOT RUN - isAdding:", isRemoving);
       let { keys } = this.state;
       if (!keys.length) keys = await this.getRefStoreKeys();
       this.setState({ ...this.state, isAdding: true });
@@ -72,7 +73,7 @@ class PixelContainer extends Component {
   async randomlyRemoveClassFromDomNodes(className, callback) {
     try {
       const { isAdding } = this.state;
-      if (isAdding) return;
+      if (isAdding) return console.log("CANNOT RUN - isAdding:", isAdding);
       let { keys } = this.state;
       if (!keys.length) keys = await this.getRefStoreKeys();
       this.setState({ ...this.state, isRemoving: true });
@@ -136,7 +137,7 @@ class PixelContainer extends Component {
   }
 
   nTimes(n, callback) {
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < n; i++) {
       callback();
     }
   }
@@ -145,7 +146,7 @@ class PixelContainer extends Component {
     if (!this.props.pixels) return <div>Loading...</div>;
     const {
       pixels: { data },
-      width
+      numberOfPixelsWide
     } = this.props;
     const RGBAMap = [];
     for (let i = 0; i < data.length; i += 4) {
@@ -155,8 +156,6 @@ class PixelContainer extends Component {
       const A = data[i + 3];
       RGBAMap.push([R, G, B, A]);
     }
-    // console.log('RGBAMAP LENGTH',RGBAMap.length);
-
     const styles = {
       display: "flex",
       flexWrap: "wrap",
@@ -167,7 +166,7 @@ class PixelContainer extends Component {
       <div>
         <button
           onClick={_ =>
-            this.nTimes(4, _ =>
+            this.nTimes(this.n, _ =>
               this.randomlyAddClassToDomNodes("blue-background", (key, className) =>
                 this.addClassToSingleDomNode(key, className)
               )
@@ -178,7 +177,7 @@ class PixelContainer extends Component {
         </button>
         <button
           onClick={_ =>
-            this.nTimes(4, _ =>
+            this.nTimes(this.n, _ =>
               this.randomlyRemoveClassFromDomNodes("blue-background", (key, className) =>
                 this.removeClassFromSingleDomNode(key, className)
               )
@@ -208,7 +207,7 @@ class PixelContainer extends Component {
           {RGBAMap &&
             RGBAMap.map((RGBA, i) => (
               <PixelNode
-                width={width}
+                numberOfPixelsWide={numberOfPixelsWide}
                 addToRefStore={this.addToRefStore}
                 id={i}
                 key={i}
@@ -222,6 +221,3 @@ class PixelContainer extends Component {
 }
 
 export default PixelContainer;
-
-// iterate over the imageData array
-// create a mapping of each pixel RGBA values
